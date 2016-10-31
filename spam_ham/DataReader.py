@@ -6,19 +6,20 @@ import csv
 from IPython import embed
 import zipfile
 import numpy as np
+import re
 
 # DataReader
 class DataReader:
-    prefix = 'data/'
     mailnames = None
     groundtruth_dict = None 
+    zipf = None
 
 
     
     def __init__(self,zipname):
 
-        zipf = zipfile.ZipFile(zipname)
-        filenames = zipf.namelist()
+        self.zipf = zipfile.ZipFile(zipname)
+        filenames = self.zipf.namelist()
         gt_filename = None
         # groundtruth_filename
         mail_names = []
@@ -35,25 +36,35 @@ class DataReader:
 
     def read_groundtruth(self,groundtruth_path):
         gt_dict = {}
-        with codecs.open(self.prefix+groundtruth_path) as csvfile:
-                gtreader = csv.reader(csvfile, delimiter=';')
-                for row in gtreader:
-                    gt_dict[row[0]] = row[1]
+        rex_row = re.compile('^(.*);(.*);.*$')
+        with self.zipf.open(groundtruth_path,'r') as csvfile:
+            for row in csvfile:
+                match = rex_row.match(row.decode('UTF-8'))
+                if match is not None:
+                    gt_dict[match.group(1)] = match.group(2)
         # Groundtruth vector loaded
-        self.groundtruth_dict = np.asarray(gt_dict)
+        self.groundtruth_dict = gt_dict
 
 
-    def read_content(self,zipf,filename):
-        filename = self.prefix+filename
-        codecs.open(filename)
+    def read_content(self,filename):
+        filename = filename
+        content = []
+        with self.zipf.open(filename,'r') as readfile:
+            for row in readfile:
+                # index hack gets rid of lineterminators
+                content.append(row.decode('UTF-8')[0:-2])
 
+        return content
 
     def evaluate(self,result_dict):
+        pass
         
     
 
             
 
 if __name__ == "__main__":
-    main = DataReader('zipdata.zip')
+    main = DataReader('trainingsdata.zip')
+    file0 = main.read_content(main.mailnames[0])
     embed()
+    
