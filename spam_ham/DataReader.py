@@ -10,8 +10,13 @@ import re
 
 # DataReader
 class DataReader:
+    # Filenames of all Mails. content can be obtained
+    # via read_content method
     mailnames = None
+    # groundtruth
     groundtruth_dict = None 
+    # zipfile containing data.
+    # shouldn't be accessed from outside DataReader
     zipf = None
 
 
@@ -57,7 +62,13 @@ class DataReader:
         return content
 
     def evaluate(self,result_dict):
-        pass
+        ham_dist = 0
+        for key in result_dict:
+            if result_dict[key] == self.groundtruth_dict[key]:
+                pass
+            else:
+                ham_dist =+ 1
+        return ham_dist
         
     
 
