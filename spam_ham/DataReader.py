@@ -78,6 +78,8 @@ class DataReader:
             full_text.append(self.read_content(mailname))
         self.k_folds = [list(zip(self.mailnames[i:int(i+l)],full_text[i:int(i+l)])) for i in range(0, k) if (i+l)<len(self.mailnames)]
 
+        return self.k_folds
+
         # should also work if result_dic does not contain all the keys
     def evaluate(self,result_dict):
         ham_dist = 0
