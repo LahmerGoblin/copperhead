@@ -87,6 +87,26 @@ class DataReader:
             else:
                 ham_dist =+ 1
         return ham_dist
+
+    def precision(self,result_dict):
+        tp = 0
+        tp_fp = 0
+        for key in result_dict:
+            if result_dict[key] == 1:
+                tp_fp += 1
+                if result_dict[key] == self.groundtruth_dict[key]:
+                    tp +=1
+        return tp/float(tp_fp)
+            
+    def recall(self,result_dict):
+        tp = 0
+        p = 0
+        for key in result_dict:
+            if self.groundtruth_dict[key] == 1 :
+                p +=1
+            if self.groundtruth_dict[key] == 1 and result_dict[key] == 1:
+                tp +=1
+        return tp/float(p)
         
 if __name__ == "__main__":
     main = DataReader('trainingsdata.zip')
