@@ -19,6 +19,7 @@ class DataReader:
     # shouldn't be accessed from outside DataReader
     zipf = None
 
+    k_folds = None
 
     
     def __init__(self,zipname):
@@ -39,7 +40,10 @@ class DataReader:
         self.mailnames = mail_names
         self.read_groundtruth(gt_filename)
 
+        
     def read_groundtruth(self,groundtruth_path):
+        ''' reads groundtruth file into a dictionary. keys are filenames,values either 1 (spam) or 0 (ham)
+        '''
         gt_dict = {}
         rex_row = re.compile('^(.*);(.*);.*$')
         with self.zipf.open(groundtruth_path,'r') as csvfile:
@@ -51,16 +55,30 @@ class DataReader:
         self.groundtruth_dict = gt_dict
 
 
-    def read_content(self,filename):
+    def read_content(self,filename,string=True):
         filename = filename
         content = []
         with self.zipf.open(filename,'r') as readfile:
             for row in readfile:
                 # index hack gets rid of lineterminators
-                content.append(row.decode('UTF-8')[0:-2])
+                content.append(row.decode('UTF-8','replace')[0:-2])
 
+        if string:
+            # return only one string, no list of rows
+            new_content = ''
+            for row in content:
+                new_content += row
+            content = new_content    
         return content
 
+    def k_fold(self,k=5):
+        l = len(self.mailnames)/k
+        full_text = []
+        for mailname in self.mailnames:
+            full_text.append(self.read_content(mailname))
+        self.k_folds = [list(zip(self.mailnames[i:int(i+l)],full_text[i:int(i+l)])) for i in range(0, k) if (i+l)<len(self.mailnames)]
+
+        # should also work if result_dic does not contain all the keys
     def evaluate(self,result_dict):
         ham_dist = 0
         for key in result_dict:
@@ -70,12 +88,9 @@ class DataReader:
                 ham_dist =+ 1
         return ham_dist
         
-    
-
-            
-
 if __name__ == "__main__":
     main = DataReader('trainingsdata.zip')
     file0 = main.read_content(main.mailnames[0])
+    main.k_fold()
     embed()
     
