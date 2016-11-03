@@ -7,6 +7,8 @@ from IPython import embed
 import zipfile
 import numpy as np
 import re
+import random
+import copy
 
 # DataReader
 class DataReader:
@@ -62,6 +64,7 @@ class DataReader:
             for row in readfile:
                 # index hack gets rid of lineterminators
                 content.append(row.decode('UTF-8','replace')[0:-2])
+                #content.append(row.decode('UTF-8','ignore')[0:-2])
 
         if string:
             # return only one string, no list of rows
@@ -71,15 +74,41 @@ class DataReader:
             content = new_content    
         return content
 
-    def k_fold(self,k=5):
-        l = len(self.mailnames)/k
-        full_text = []
-        for mailname in self.mailnames:
-            full_text.append(self.read_content(mailname))
-        self.k_folds = [list(zip(self.mailnames[i:int(i+l)],full_text[i:int(i+l)])) for i in range(0, k) if (i+l)<len(self.mailnames)]
+#    def k_fold(self,k=5,rand=False):
+#        l = len(self.mailnames)/k
+#        full_text = []
+#        if rand:
+#            shuffled_mailnames = random.shuffle(copy.deepcopy(self.mailnames))
+#        else:
+#            shuffled_mailnames = self.mailnames
+#
+#        for mailname in shuffled_mailnames:
+#            full_text.append(self.read_content(mailname))
+#        self.k_folds = [list(zip(shuffled_mailnames[i:int(i+l)],full_text[i:int(i+l)])) for i in range(0, k) if (i+l)<len(self.mailnames)]
+#
+#        return self.k_folds
 
-        return self.k_folds
+    def k_fold(self,k=5,rand=False):
+        data = self.mailnames
+        if rand:
+           data  = random.shuffle(copy.deepcopy(self.mailnames))
 
+        r = len(data)%k
+        #print(r)
+        # get rid of tail
+        tail_count = len(data) - r
+        data = data[:tail_count]
+        length = int(len(data)/k)
+        #print(length)
+        folds = []
+        for i in range(0,k):
+            x = int(i*length)
+            y = int(i*length+length)
+            print(str(x) + ':' + str(y))
+            folds.append(data[x:y])
+        self.k_folds = folds
+        return folds
+    
         # should also work if result_dic does not contain all the keys
     def evaluate(self,result_dict):
         ham_dist = 0
