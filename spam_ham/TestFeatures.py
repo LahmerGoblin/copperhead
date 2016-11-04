@@ -21,7 +21,7 @@ import codecs
 
 import itertools
 
-k = 2
+k = 5
 reader = DataReader('trainingsdata.zip')
 stemmer = PorterStemmer() 
 fold_runs = []
@@ -31,7 +31,7 @@ if not os.path.isfile('train_features_' + str(k) + '.pickle'):
     # k-fold cross validation
     # k defaults to 5
     # TODO: k_folds does not work
-    k_folds = reader.k_fold(k=k)   
+    k_folds = reader.k_fold(k=k,rand=True)   
     
     for test_fold in k_folds:
         # exclude current test_fold
@@ -86,7 +86,7 @@ for run in fold_runs:
     for x in X:
         concat_X.append(' '.join(x))
     # transform all the strings into a sparse matrix
-    sparse_X = vectorizer.transform(concat_X)         
+    sparse_X = vectorizer.fit_transform(concat_X)         
 
     bayes = ('mbayes',MultinomialNB())
     class_pipeline = Pipeline([bayes])
@@ -103,7 +103,7 @@ for run in fold_runs:
         
         res_set[mail[0]] = class_pipeline.predict(conc_mail)
     res_sets.append(res_set)
-pickle.dump(res_sets,codecs.open('eval_' + k + '_bayes.pickle'))
+pickle.dump(res_sets,codecs.open('eval_' + str(k) + '_bayes.pickle'))
 embed()
 
 

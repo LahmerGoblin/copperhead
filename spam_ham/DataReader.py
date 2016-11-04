@@ -63,7 +63,7 @@ class DataReader:
         with self.zipf.open(filename,'r') as readfile:
             for row in readfile:
                 # index hack gets rid of lineterminators
-                content.append(row.decode('UTF-8','replace')[0:-2])
+                content.append(row.decode('UTF-8','replace')[0:-2] + ' ') 
                 #content.append(row.decode('UTF-8','ignore')[0:-2])
 
         if string:
@@ -91,7 +91,8 @@ class DataReader:
     def k_fold(self,k=5,rand=False):
         data = self.mailnames
         if rand:
-           data  = random.shuffle(copy.deepcopy(self.mailnames))
+            data = copy.deepcopy(self.mailnames)
+            random.shuffle(data)
 
         r = len(data)%k
         #print(r)
