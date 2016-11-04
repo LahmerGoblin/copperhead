@@ -70,6 +70,7 @@ if not os.path.isfile('train_features.pickle'):
 else:
     fold_runs = pickle.load(codecs.open('train_features.pickle', 'rb'))
 
+res_sets = []
 for run in fold_runs:
     test_fold = run[0]
     folds = run[1]
@@ -101,8 +102,9 @@ for run in fold_runs:
         conc_mail = vectorizer.transform(' '.join(stemmed_mail_nostops))
         
         res_set[mail[0]] = class_pipeline.predict(conc_mail)
-
-    embed()
+    res_sets.append(res_set)
+pickle.dump(codecs.open('eval_' + k + '_bayes.pickle'))
+embed()
 
 
 
