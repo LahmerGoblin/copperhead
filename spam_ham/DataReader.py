@@ -98,6 +98,9 @@ class DataReader:
         # get rid of tail
         tail_count = len(data) - r
         data = data[:tail_count]
+        # acquire full text
+        for i,d in enumerate(data):
+            data[i] = (d,self.read_content(d))
         length = int(len(data)/k)
         #print(length)
         folds = []
@@ -106,6 +109,7 @@ class DataReader:
             y = int(i*length+length)
             print(str(x) + ':' + str(y))
             folds.append(data[x:y])
+        
         self.k_folds = folds
         return folds
     
