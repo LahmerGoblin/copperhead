@@ -21,17 +21,17 @@ import codecs
 
 import itertools
 
+k = 2
 reader = DataReader('trainingsdata.zip')
 stemmer = PorterStemmer() 
 fold_runs = []
 
-if not os.path.isfile('train_features.pickle'):
+if not os.path.isfile('train_features_' + str(k) + '.pickle'):
         
     # k-fold cross validation
     # k defaults to 5
     # TODO: k_folds does not work
-    k_folds = reader.k_fold(k=2)   
-    embed()
+    k_folds = reader.k_fold(k=k)   
     
     for test_fold in k_folds:
         # exclude current test_fold
@@ -66,9 +66,9 @@ if not os.path.isfile('train_features.pickle'):
         fold_runs.append((test_fold,folds,X,y,features))
     # pickle away
     pickle.dump(fold_runs,
-                codecs.open('train_features.pickle', 'wb'))
+                codecs.open('train_features_' + str(k) + '.pickle', 'wb'))
 else:
-    fold_runs = pickle.load(codecs.open('train_features.pickle', 'rb'))
+    fold_runs = pickle.load(codecs.open('train_features_' + str(k) + '.pickle', 'rb'))
 
 res_sets = []
 for run in fold_runs:
@@ -103,7 +103,7 @@ for run in fold_runs:
         
         res_set[mail[0]] = class_pipeline.predict(conc_mail)
     res_sets.append(res_set)
-pickle.dump(codecs.open('eval_' + k + '_bayes.pickle'))
+pickle.dump(res_sets,codecs.open('eval_' + k + '_bayes.pickle'))
 embed()
 
 
