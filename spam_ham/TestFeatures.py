@@ -44,6 +44,7 @@ if not os.path.isfile('train_features_' + str(k) + '_preextracted.pickle'):
             stemmed_mail_nostops = [ stemmer.stem_word(word) for word in tokenized_mail if word not in stopwords.words('english')]
             # remove characters of length one - such as parentheses
             stemmed_mail_nostops = [ word for word in stemmed_mail_nostops if len(word)>1]
+
             # build dict
             bow = {}
             for word in stemmed_mail_nostops:
@@ -71,6 +72,7 @@ if not os.path.isfile('train_features_' + str(k) + '_preextracted.pickle'):
         # exclude current test_fold
         extracted_folds_train = [ ext_fold for ext_fold in extracted_k_folds if ext_fold is not extracted_k_folds[i]]
         ext_test_fold = extracted_k_folds[i]
+
         #determining vocab
         # isolate words from trainingsset only
         words = []
@@ -102,22 +104,22 @@ for run in fold_runs:
         
     # TODO: transform X into feature matrix
     print('No. of features ' + str(len(features)))
-    vectorizer = DictVectorizer(vocabulary=features)
+    #vectorizer = DictVectorizer(vocabulary=features)
+    vectorizer = DictVectorizer()
     # Now transform every tokenized mail back into one string
     # transform all the strings into a sparse matrix
     sparse_X = vectorizer.fit_transform(tokenized_mails)         
 
     # train model 
-    #bayes = ('mbayes',MultinomialNB())
-    svm = ('svc',SVC(kernel='linear'))
+    bayes = ('mbayes',MultinomialNB())
+    #svm = ('svc',SVC(kernel='linear'))
     class_pipeline = Pipeline([bayes])
     class_pipeline.fit(sparse_X,groundtruth)
 
     res_set = {}
     # evaluate each mail and add classification to res_set
     for mail in ext_test_fold[0]:
-        joined_mail = ' '.join(mail[1])
-        mail_vec = vectorizer.fit_transform(joined_mail)
+        mail_vec = vectorizer.transform(mail[1])
         res_set[mail[0]] = class_pipeline.predict(mail_vec)
 
     res_sets.append(res_set)
