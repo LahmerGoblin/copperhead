@@ -123,7 +123,9 @@ for run in fold_runs:
         res_set[mail[0]] = class_pipeline.predict(mail_vec)
 
     res_sets.append(res_set)
-pickle.dump(res_sets,codecs.open('eval_' + str(k) + '_bayes_preextracted.pickle','wb'))
+persist_path = 'eval_' + str(k) + '_bayes_preextracted.pickle'
+if not os.path.isfile(persist_path):
+    pickle.dump(res_sets,codecs.open(persist_path,'wb'))
 embed()
 
 

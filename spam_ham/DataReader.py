@@ -24,7 +24,7 @@ class DataReader:
     k_folds = None
 
     
-    def __init__(self,zipname):
+    def __init__(self,zipname,gt=True):
 
         self.zipf = zipfile.ZipFile(zipname)
         filenames = self.zipf.namelist()
@@ -40,7 +40,8 @@ class DataReader:
             mail_names.append(f)
 
         self.mailnames = mail_names
-        self.read_groundtruth(gt_filename)
+        if gt:
+            self.read_groundtruth(gt_filename)
 
         
     def read_groundtruth(self,groundtruth_path):
