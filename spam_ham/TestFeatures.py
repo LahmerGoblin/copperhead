@@ -12,9 +12,10 @@ from IPython import embed
 
 from sklearn.pipeline import Pipeline
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
 #from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction import DictVectorizer
+from sklearn.svm import SVC
 
 import os
 import pickle
@@ -111,9 +112,10 @@ for run in fold_runs:
     sparse_X = vectorizer.fit_transform(tokenized_mails)         
 
     # train model 
-    bayes = ('mbayes',MultinomialNB())
-    #svm = ('svc',SVC(kernel='linear'))
-    class_pipeline = Pipeline([bayes])
+    #bayes = ('mbayes',MultinomialNB())
+    svm = ('svc',SVC(kernel='linear'))
+    tfidf = ('tfidf',TfidfTransformer())
+    class_pipeline = Pipeline([tfidf,svm])
     class_pipeline.fit(sparse_X,groundtruth)
 
     res_set = {}
@@ -123,7 +125,7 @@ for run in fold_runs:
         res_set[mail[0]] = class_pipeline.predict(mail_vec)
 
     res_sets.append(res_set)
-persist_path = 'eval_' + str(k) + '_bayes_preextracted.pickle'
+persist_path = 'eval_' + str(k) + '_svm_tfidf_preextracted.pickle'
 if not os.path.isfile(persist_path):
     pickle.dump(res_sets,codecs.open(persist_path,'wb'))
 embed()

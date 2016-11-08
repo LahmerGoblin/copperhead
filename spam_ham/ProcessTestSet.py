@@ -13,6 +13,7 @@ from IPython import embed
 from sklearn.pipeline import Pipeline
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction import DictVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
 
 import os
 import pickle
@@ -23,7 +24,8 @@ import itertools
 vectorizer = None
 class_pipeline = None
 stemmer = PorterStemmer() 
-model_path = 'nb_trained_class_pipe.pickle'
+model_path = 'svm_trained_class_pipe_tfidf.pickle'
+out_path = 'out_svm_tfidf.pickle';
 if not os.path.isfile(model_path):
 
     train_reader = DataReader('trainingsdata.zip')
@@ -54,9 +56,10 @@ if not os.path.isfile(model_path):
     # transform all the strings into a sparse matrix
     sparse_vecs = vectorizer.fit_transform(train_features)         
     # train model 
-    bayes = ('mbayes',MultinomialNB())
-    #svm = ('svc',SVC(kernel='linear'))
-    class_pipeline = Pipeline([bayes])
+    #bayes = ('mbayes',MultinomialNB())
+    svm = ('svc',SVC(kernel='linear'))
+    tfidf = ('tfidf',TfidfTransformer())
+    class_pipeline = Pipeline([tfidf,svm])
     class_pipeline.fit(sparse_vecs,groundtruth)
     pickle.dump((vectorizer,class_pipeline),codecs.open(model_path,'wb'))
 else:
@@ -67,24 +70,31 @@ else:
 test_reader = DataReader('testdata.zip',gt=False)
 
 output = []
-for mailname in test_reader.mailnames:
-    mail = test_reader.read_content(mailname)
-    tokenized_mail = word_tokenize(mail)
-    # remove stopwords and stemming
-    stemmed_mail_nostops = [ stemmer.stem_word(word) for word in tokenized_mail if word not in stopwords.words('english')]
-    # remove characters of length one - such as parentheses
-    stemmed_mail_nostops = [ word for word in stemmed_mail_nostops if len(word)>1]
-    bow = {}
-    for word in stemmed_mail_nostops:
-        try:
-            bow[word] += 1
-        except KeyError:
-            bow[word] = 1
-    mail_vec = vectorizer.transform(bow)
-    result = class_pipeline.predict(mail_vec)
-    mail_title = mail[len('spam1-test/'):]
-    output.append(mail_title + ';' + str(result))
-with codecs.open('copperhead_testset_01','w') as out_file:
+if os.path.isfile(out_path):
+    output = pickle.load(codecs.open(out_path,'rb'))
+else:
+    for mailname in test_reader.mailnames:
+        mail = test_reader.read_content(mailname)
+        tokenized_mail = word_tokenize(mail)
+        # remove stopwords and stemming
+        stemmed_mail_nostops = [ stemmer.stem_word(word) for word in tokenized_mail if word not in stopwords.words('english')]
+        # remove characters of length one - such as parentheses
+        stemmed_mail_nostops = [ word for word in stemmed_mail_nostops if len(word)>1]
+        bow = {}
+        for word in stemmed_mail_nostops:
+            try:
+                bow[word] += 1
+            except KeyError:
+                bow[word] = 1
+        mail_vec = vectorizer.transform(bow)
+        result = int(class_pipeline.predict(mail_vec))
+        mail_title = mailname[len('spam1-test/'):]
+    
+        output.append(mail_title + ';' + str(result))
+    pickle.dump(output,codecs.open(out_path,'wb'))
+embed()
+output = [ out+'\n' for out in output] 
+with codecs.open('copperhead_testset_02_tfidf','wb','utf-8') as out_file:
     out_file.writelines(output)
 
     

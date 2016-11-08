@@ -11,8 +11,10 @@ from DataReader import DataReader
 from IPython import embed
 
 k = 5
-persist_path = 'eval_' + str(k) + '_bayes_preextracted.pickle'
-res_sets = pickle.load(codecs.open(persist_path,'rb'))
+persist_path_tfidf = 'eval_' + str(k) + '_svm_tfidf_preextracted.pickle'
+persist_path_svm = 'eval_' + str(k) + '_svm_preextracted.pickle'
+persist_path_bayes = 'eval_' + str(k) + '_bayes_preextracted.pickle'
+res_sets = pickle.load(codecs.open(persist_path_tfidf,'rb'))
 
 reader = DataReader('trainingsdata.zip')
 
