@@ -14,6 +14,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.svm import SVC
 
 import os
 import pickle
@@ -24,8 +25,8 @@ import itertools
 vectorizer = None
 class_pipeline = None
 stemmer = PorterStemmer() 
-model_path = 'svm_trained_class_pipe_tfidf.pickle'
-out_path = 'out_svm_tfidf.pickle';
+model_path = 'svm_trained_class_pipe_linear_bigram.pickle'
+out_path = 'out_svm_linear_bigram.pickle';
 if not os.path.isfile(model_path):
 
     train_reader = DataReader('trainingsdata.zip')
@@ -45,6 +46,14 @@ if not os.path.isfile(model_path):
                 bow[word] += 1
             except KeyError:
                 bow[word] = 1
+        # add bigrams as additional feature
+        n_grams = Features.n_grams(stemmed_mail_nostops,n=2)
+        n_grams = [ n_gram[0].join(n_gram[1]) for n_gram in n_grams]
+        for word in n_grams:
+            try:
+                bow[word] += 1
+            except KeyError:
+                bow[word] = 1
         spam_ham = mail[0][len('spam1-train/'):]
         train_features.append(bow)
         gt_key = mailname[len('spam1-train/'):]
@@ -58,8 +67,8 @@ if not os.path.isfile(model_path):
     # train model 
     #bayes = ('mbayes',MultinomialNB())
     svm = ('svc',SVC(kernel='linear'))
-    tfidf = ('tfidf',TfidfTransformer())
-    class_pipeline = Pipeline([tfidf,svm])
+    #tfidf = ('tfidf',TfidfTransformer())
+    class_pipeline = Pipeline([svm])
     class_pipeline.fit(sparse_vecs,groundtruth)
     pickle.dump((vectorizer,class_pipeline),codecs.open(model_path,'wb'))
 else:
@@ -94,7 +103,7 @@ else:
     pickle.dump(output,codecs.open(out_path,'wb'))
 embed()
 output = [ out+'\n' for out in output] 
-with codecs.open('copperhead_testset_02_tfidf','wb','utf-8') as out_file:
+with codecs.open('copperhead_testset_04_svm_linear_bigram','wb','utf-8') as out_file:
     out_file.writelines(output)
 
     

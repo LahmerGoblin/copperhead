@@ -27,8 +27,8 @@ k = 5
 reader = DataReader('trainingsdata.zip')
 stemmer = PorterStemmer() 
 fold_runs = []
-
-if not os.path.isfile('train_features_' + str(k) + '_preextracted.pickle'):
+extracted_feature_path ='train_features_' + str(k) + '_preextracted_bigrams.pickle'
+if not os.path.isfile(extracted_feature_path):
         
     # k-fold cross validation
     # k defaults to 5
@@ -54,7 +54,7 @@ if not os.path.isfile('train_features_' + str(k) + '_preextracted.pickle'):
                 except KeyError:
                     bow[word] = 1
             # add bigrams as additional feature
-            n_grams = Features.n_grams(stemmed_mail_nostrops,n=2)
+            n_grams = Features.n_grams(stemmed_mail_nostops,n=2)
             n_grams = [ n_gram[0].join(n_gram[1]) for n_gram in n_grams]
             for word in n_grams:
                 try:
@@ -94,9 +94,9 @@ if not os.path.isfile('train_features_' + str(k) + '_preextracted.pickle'):
         fold_runs.append((ext_test_fold,extracted_folds_train,features))
     # pickle away
     pickle.dump(fold_runs,
-                codecs.open('train_features_' + str(k) + '_preextracted.pickle', 'wb'))
+                codecs.open(extracted_feature_path, 'wb'))
 else:
-    fold_runs = pickle.load(codecs.open('train_features_' + str(k) + '_preextracted.pickle', 'rb'))
+    fold_runs = pickle.load(codecs.open(extracted_feature_path, 'rb'))
 
 res_sets = []
 for run in fold_runs:
@@ -134,7 +134,7 @@ for run in fold_runs:
         res_set[mail[0]] = class_pipeline.predict(mail_vec)
 
     res_sets.append(res_set)
-persist_path = 'eval_' + str(k) + '_svm_tfidf_preextracted.pickle'
+persist_path = 'eval_' + str(k) + '_svm_preextracted_bigrams.pickle'
 if not os.path.isfile(persist_path):
     pickle.dump(res_sets,codecs.open(persist_path,'wb'))
 embed()
