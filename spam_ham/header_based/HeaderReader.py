@@ -11,7 +11,7 @@ import random
 import copy
 
 # DataReader
-class DataReader:
+class HeaderReader:
     # Filenames of all Mails. content can be obtained
     # via read_content method
     mailnames = None
@@ -58,21 +58,12 @@ class DataReader:
         self.groundtruth_dict = gt_dict
 
 
-    def read_content(self,filename,string=True):
+    def read_content(self,filename):
         filename = filename
         content = []
-        with self.zipf.open(filename,'r') as readfile:
-            for row in readfile:
-                # index hack gets rid of lineterminators
-                content.append(row.decode('UTF-8','replace')[0:-2] + ' ') 
-                #content.append(row.decode('UTF-8','ignore')[0:-2])
+        with self.zipf.open(filename,'r','utf-8',errors='replace') as readfile:
+            content = readfile.readlines()
 
-        if string:
-            # return only one string, no list of rows
-            new_content = ''
-            for row in content:
-                new_content += row
-            content = new_content    
         return content
 
 #    def k_fold(self,k=5,rand=False):
