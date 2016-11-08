@@ -53,6 +53,15 @@ if not os.path.isfile('train_features_' + str(k) + '_preextracted.pickle'):
                     bow[word] += 1
                 except KeyError:
                     bow[word] = 1
+            # add bigrams as additional feature
+            n_grams = Features.n_grams(stemmed_mail_nostrops,n=2)
+            n_grams = [ n_gram[0].join(n_gram[1]) for n_gram in n_grams]
+            for word in n_grams:
+                try:
+                    bow[word] += 1
+                except KeyError:
+                    bow[word] = 1
+
             # get rid of prefix 
             spam_ham = mail[0][len('spam1-train/'):]
             #acquire groundtruth
