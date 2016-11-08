@@ -4,6 +4,7 @@
 import os
 import codecs
 import pickle
+import sys
 
 import numpy as np
 
@@ -11,10 +12,11 @@ from DataReader import DataReader
 from IPython import embed
 
 k = 5
-persist_path_tfidf = 'eval_' + str(k) + '_svm_tfidf_preextracted.pickle'
-persist_path_svm = 'eval_' + str(k) + '_svm_preextracted.pickle'
-persist_path_bayes = 'eval_' + str(k) + '_bayes_preextracted.pickle'
-res_sets = pickle.load(codecs.open(persist_path_tfidf,'rb'))
+persist_path = sys.argv[1]
+#persist_path_tfidf = 'eval_' + str(k) + '_svm_tfidf_preextracted.pickle'
+#persist_path_svm = 'eval_' + str(k) + '_svm_preextracted.pickle'
+#persist_path_bayes = 'eval_' + str(k) + '_bayes_preextracted.pickle'
+res_sets = pickle.load(codecs.open(persist_path,'rb'))
 
 reader = DataReader('trainingsdata.zip')
 
@@ -32,14 +34,17 @@ for res_set in res_sets:
         
         if truth == 1:
             count_spam_gt += 1
+            if 1 == int(res_set['spam1-train/'+gt_key][0]):
+                count_correct_spam +=1
         else:
             count_ham_gt += 1
-
-        if int(reader.groundtruth_dict[gt_key])== int(res_set['spam1-train/'+gt_key][0]):
-            if truth == 1:
-                count_correct_spam +=1
-            else:
+            if 0 == int(res_set['spam1-train/'+gt_key][0]):
                 count_correct_ham += 1
+
+        #if int(reader.groundtruth_dict[gt_key])== int(res_set['spam1-train/'+gt_key][0]):
+        #if truth == int(res_set['spam1-train/'+gt_key][0]):
+        #    if truth == 1:
+        #    else:
     print(count_spam_gt)
     print(count_correct_spam)
     print(count_ham_gt)
