@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from DataReader import DataReader
-import Features
+from HeaderReader import HeaderReader
+#import Features
 
 from nltk.tokenize import word_tokenize            
 from nltk.corpus import stopwords
@@ -20,11 +20,12 @@ from sklearn.svm import SVC
 import os
 import pickle
 import codecs
+import sys
 
 import itertools
 
 k = 5
-reader = DataReader('trainingsdata.zip')
+reader = HeaderReader('trainingsheader.zip')
 stemmer = PorterStemmer() 
 fold_runs = []
 
@@ -40,15 +41,16 @@ if not os.path.isfile('train_features_' + str(k) + '_preextracted.pickle'):
         groundtruth_matrix = []
         for mail in fold:
             print('Performing Feature Extraction '+ mail[0])
-            tokenized_mail = word_tokenize(mail[1])
+            #tokenized_mail = word_tokenize(mail[1])
+            tokenized_mail = [ str(m)[2:-3].split(' ') for m in mail[1]]
             # remove stopwords and stemming
-            stemmed_mail_nostops = [ stemmer.stem_word(word) for word in tokenized_mail if word not in stopwords.words('english')]
+            #stemmed_mail_nostops = [ stemmer.stem_word(word) for word in tokenized_mail]
             # remove characters of length one - such as parentheses
-            stemmed_mail_nostops = [ word for word in stemmed_mail_nostops if len(word)>1]
+            #stemmed_mail_nostops = [ word for word in stemmed_mail_nostops if len(word)>1]
 
             # build dict
             bow = {}
-            for word in stemmed_mail_nostops:
+            for word in itertools.chain(*tokenized_mail):
                 try:
                     bow[word] += 1
                 except KeyError:
@@ -112,10 +114,15 @@ for run in fold_runs:
     sparse_X = vectorizer.fit_transform(tokenized_mails)         
 
     # train model 
-    #bayes = ('mbayes',MultinomialNB())
-    svm = ('svc',SVC(kernel='linear'))
-    tfidf = ('tfidf',TfidfTransformer())
-    class_pipeline = Pipeline([tfidf,svm])
+    classifier = {} 
+    classifier['bayes'] = ('mbayes',MultinomialNB())
+    classifier['svm'] = ('svc',SVC(kernel='linear'))
+    classifier['tfidf'] = ('tfidf',TfidfTransformer())
+    classifier_chain = []
+    for arg in sys.argv[1:]:
+        classifier_chain.append(classifier[arg])
+
+    class_pipeline = Pipeline(classifier_chain)
     class_pipeline.fit(sparse_X,groundtruth)
 
     res_set = {}
@@ -125,7 +132,10 @@ for run in fold_runs:
         res_set[mail[0]] = class_pipeline.predict(mail_vec)
 
     res_sets.append(res_set)
-persist_path = 'eval_' + str(k) + '_svm_tfidf_preextracted.pickle'
+classifiers = ''
+for arg in sys.argv[1:]:
+    classifiers += arg + '_'
+persist_path = 'eval_' + str(k) + '_' + classifiers + 'preextracted.pickle'
 if not os.path.isfile(persist_path):
     pickle.dump(res_sets,codecs.open(persist_path,'wb'))
 embed()

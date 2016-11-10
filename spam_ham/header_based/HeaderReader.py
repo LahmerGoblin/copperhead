@@ -61,7 +61,7 @@ class HeaderReader:
     def read_content(self,filename):
         filename = filename
         content = []
-        with self.zipf.open(filename,'r','utf-8',errors='replace') as readfile:
+        with self.zipf.open(filename,'rU') as readfile:
             content = readfile.readlines()
 
         return content
@@ -137,7 +137,7 @@ class HeaderReader:
         return tp/float(p)
         
 if __name__ == "__main__":
-    main = DataReader('trainingsdata.zip')
+    main = HeaderReader('trainingsheader.zip')
     file0 = main.read_content(main.mailnames[0])
     main.k_fold()
     embed()
