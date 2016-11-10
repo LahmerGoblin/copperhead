@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from HeaderReader import HeaderReader
-#import Features
+import HeaderFeatures
 
 from nltk.tokenize import word_tokenize            
 from nltk.corpus import stopwords
@@ -16,6 +16,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 #from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 
 import os
 import pickle
@@ -26,10 +27,9 @@ import itertools
 
 k = 5
 reader = HeaderReader('trainingsheader.zip')
-stemmer = PorterStemmer() 
 fold_runs = []
 
-if not os.path.isfile('train_features_' + str(k) + '_preextracted.pickle'):
+if not os.path.isfile('train_features_' + str(k) + '_bigrams_preextracted.pickle'):
         
     # k-fold cross validation
     # k defaults to 5
@@ -41,12 +41,7 @@ if not os.path.isfile('train_features_' + str(k) + '_preextracted.pickle'):
         groundtruth_matrix = []
         for mail in fold:
             print('Performing Feature Extraction '+ mail[0])
-            #tokenized_mail = word_tokenize(mail[1])
             tokenized_mail = [ str(m)[2:-3].split(' ') for m in mail[1]]
-            # remove stopwords and stemming
-            #stemmed_mail_nostops = [ stemmer.stem_word(word) for word in tokenized_mail]
-            # remove characters of length one - such as parentheses
-            #stemmed_mail_nostops = [ word for word in stemmed_mail_nostops if len(word)>1]
 
             # build dict
             bow = {}
@@ -56,6 +51,15 @@ if not os.path.isfile('train_features_' + str(k) + '_preextracted.pickle'):
                 except KeyError:
                     bow[word] = 1
             # get rid of prefix 
+
+            bigrams = HeaderFeatures.ngrams(itertools.chain(*tokenized_mail)
+            for bigram in bigrams:
+                try:
+                    bow[bigram] += 1
+                except KeyError:
+                    bow[bigram] = 1
+                                            
+            
             spam_ham = mail[0][len('spam1-train/'):]
             #acquire groundtruth
             groundtruth_matrix.append(reader.groundtruth_dict[spam_ham])
@@ -117,7 +121,10 @@ for run in fold_runs:
     classifier = {} 
     classifier['bayes'] = ('mbayes',MultinomialNB())
     classifier['svm'] = ('svc',SVC(kernel='linear'))
+    svm = ('svc',SVC(kernel='linear'))
     classifier['tfidf'] = ('tfidf',TfidfTransformer())
+    classifier['randfor'] = ('random_forest',RandomForestClassifier())
+    tfidf = ('tfidf',TfidfTransformer())
     classifier_chain = []
     for arg in sys.argv[1:]:
         classifier_chain.append(classifier[arg])
@@ -138,7 +145,6 @@ for arg in sys.argv[1:]:
 persist_path = 'eval_' + str(k) + '_' + classifiers + 'preextracted.pickle'
 if not os.path.isfile(persist_path):
     pickle.dump(res_sets,codecs.open(persist_path,'wb'))
-embed()
 
 
 
