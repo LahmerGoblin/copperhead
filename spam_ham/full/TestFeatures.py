@@ -26,7 +26,7 @@ import sys
 import itertools
 
 k = 5
-reader = HeaderReader('trainingsheader.zip')
+reader = FullReader('training_full.zip')
 fold_runs = []
 feature_path = 'train_features_' + str(k) + '_bigrams_preextracted.pickle'
 
@@ -41,8 +41,9 @@ if not os.path.isfile(feature_path):
         feature_matrix = []
         groundtruth_matrix = []
         for mail in fold:
+            # extract header
             print('Performing Feature Extraction '+ mail[0])
-            tokenized_mail = [ str(m)[2:-3].split(' ') for m in mail[1]]
+            tokenized_mail = [ str(m)[2:-3].split(' ') for m in mail[1][0]]
 
             # build dict
             bow = {}
@@ -65,6 +66,7 @@ if not os.path.isfile(feature_path):
                     bow[bistring] = 1
                                             
             
+            #extract body
             spam_ham = mail[0][len('spam1-train/'):]
             #acquire groundtruth
             groundtruth_matrix.append(reader.groundtruth_dict[spam_ham])

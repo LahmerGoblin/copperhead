@@ -11,7 +11,7 @@ import random
 import copy
 
 # DataReader
-class HeaderReader:
+class FullReader:
     # Filenames of all Mails. content can be obtained
     # via read_content method
     mailnames = None
@@ -57,14 +57,35 @@ class HeaderReader:
         # Groundtruth vector loaded
         self.groundtruth_dict = gt_dict
 
+    def subj(header_line):
+        regex =re.compile('Subject: (.*)$')
+        match = regex.match(header_line)
+        ret_value = ''
+        if match is not None:
+            ret_value = match.group(1)
+            return ret_value
+        return None
 
     def read_content(self,filename):
         filename = filename
         content = []
         with self.zipf.open(filename,'rU') as readfile:
             content = readfile.readlines()
+        head_end = content.index('\n')
+        header = content[:head_end]
+        # find Subject, if any
+        subject = None
+        for line in header:
+            match = self.subj(line)
+            if match is not None:
+                break
+        body = content[:head_end]
+        if subject is not None:
+            body.reverse()
+            body.append(subject)
+            body.reverse()
 
-        return content
+        return (header,body)
 
 #    def k_fold(self,k=5,rand=False):
 #        l = len(self.mailnames)/k
