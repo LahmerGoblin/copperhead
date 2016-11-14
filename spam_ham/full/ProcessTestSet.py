@@ -70,6 +70,7 @@ if not os.path.isfile(model_path):
     svm = ('svc',SVC(kernel='linear'))
     tfidf = ('tfidf',TfidfTransformer())
     #randfor = ('random_forest',RandomForestClassifier())
+    print('Training model')
     class_pipeline = Pipeline([tfidf,svm])
     class_pipeline.fit(sparse_vecs,groundtruth)
     pickle.dump((vectorizer,class_pipeline),codecs.open(model_path,'wb'))
