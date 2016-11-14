@@ -64,6 +64,26 @@ if not os.path.isfile(feature_path):
                     bow[bistring] += 1
                 except KeyError:
                     bow[bistring] = 1
+
+            tokenized_mail = word_tokenize(mail[1][1])
+            # remove stopwords and stemming
+            stemmed_mail_nostops = [ stemmer.stem_word(word) for word in tokenized_mail if word not in stopwords.words('english')]
+            # remove characters of length one - such as parentheses
+            stemmed_mail_nostops = [ word for word in stemmed_mail_nostops if len(word)>1]
+
+            for word in stemmed_mail_nostops:
+                try:
+                    bow[word] += 1
+                except KeyError:
+                    bow[word] = 1
+            # add bigrams as additional feature
+            n_grams = FullFeatures.ngrams(stemmed_mail_nostops,n=2)
+            n_grams = [ n_gram[0].join(n_gram[1]) for n_gram in n_grams]
+            for word in n_grams:
+                try:
+                    bow[word] += 1
+                except KeyError:
+                    bow[word] = 1
                                             
             
             #extract body
