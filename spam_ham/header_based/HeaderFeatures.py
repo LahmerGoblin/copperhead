@@ -5,7 +5,7 @@ import re
 
 # Collection of features for header-driven spam detection
 
-def n_grams(tokenized_string,n=2):
+def ngrams(tokenized_string,n=2):
     ''' outputs ngrams of given string with n being the size of a sliding window moving over tokenized_string. '''
     n_grams = []
 

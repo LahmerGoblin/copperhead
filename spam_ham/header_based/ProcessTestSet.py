@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from HeaderReader import HeaderReader
-#import Features
+import HeaderFeatures
 
 from nltk.tokenize import word_tokenize            
 from nltk.corpus import stopwords
@@ -15,6 +15,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 
 import os
 import pickle
@@ -25,8 +26,8 @@ import itertools
 vectorizer = None
 class_pipeline = None
 stemmer = PorterStemmer() 
-model_path = 'svm_tfidf_classpipe.pickle'
-out_path = 'out_svm_tfidf.pickle';
+model_path = 'svm_tfidf__bigrams_classpipe.pickle'
+out_path = 'out_svm_tfidf__bigrams.pickle';
 if not os.path.isfile(model_path):
 
     train_reader = HeaderReader('trainingsheader.zip')
@@ -43,6 +44,17 @@ if not os.path.isfile(model_path):
                 bow[word] += 1
             except KeyError:
                 bow[word] = 1
+
+        bigrams = [HeaderFeatures.ngrams(line) for line in tokenized_mail]
+
+        for bigram in itertools.chain(*bigrams):
+            # convert bigram
+            bistring = bigram[0]+bigram[1]
+            try:
+                bow[bistring] += 1
+            except KeyError:
+                bow[bistring] = 1
+
         spam_ham = mail[0][len('spam1-train/'):]
         train_features.append(bow)
         gt_key = mailname[len('spam1-train/'):]
@@ -57,6 +69,7 @@ if not os.path.isfile(model_path):
     #bayes = ('mbayes',MultinomialNB())
     svm = ('svc',SVC(kernel='linear'))
     tfidf = ('tfidf',TfidfTransformer())
+    #randfor = ('random_forest',RandomForestClassifier())
     class_pipeline = Pipeline([tfidf,svm])
     class_pipeline.fit(sparse_vecs,groundtruth)
     pickle.dump((vectorizer,class_pipeline),codecs.open(model_path,'wb'))
@@ -80,6 +93,17 @@ else:
                 bow[word] += 1
             except KeyError:
                 bow[word] = 1
+
+        bigrams = [HeaderFeatures.ngrams(line) for line in tokenized_mail]
+
+        for bigram in itertools.chain(*bigrams):
+            # convert bigram
+            bistring = bigram[0]+bigram[1]
+            try:
+                bow[bistring] += 1
+            except KeyError:
+                bow[bistring] = 1
+
         mail_vec = vectorizer.transform(bow)
         result = int(class_pipeline.predict(mail_vec))
         mail_title = mailname[len('spam3-test/'):]
@@ -87,7 +111,7 @@ else:
         output.append(mail_title + ';' + str(result))
     pickle.dump(output,codecs.open(out_path,'wb'))
 output = [ out+'\n' for out in output] 
-with codecs.open('copperhead_testset_01_header_svm_tfidf','wb','utf-8') as out_file:
+with codecs.open('copperhead_testset_04_header_svm_tfidf_bigrams.csv','wb','utf-8') as out_file:
     out_file.writelines(output)
 
     

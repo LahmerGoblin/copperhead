@@ -28,8 +28,9 @@ import itertools
 k = 5
 reader = HeaderReader('trainingsheader.zip')
 fold_runs = []
+feature_path = 'train_features_' + str(k) + '_bigrams_preextracted.pickle'
 
-if not os.path.isfile('train_features_' + str(k) + '_bigrams_preextracted.pickle'):
+if not os.path.isfile(feature_path):
         
     # k-fold cross validation
     # k defaults to 5
@@ -52,12 +53,16 @@ if not os.path.isfile('train_features_' + str(k) + '_bigrams_preextracted.pickle
                     bow[word] = 1
             # get rid of prefix 
 
-            bigrams = HeaderFeatures.ngrams(itertools.chain(*tokenized_mail)
-            for bigram in bigrams:
+
+            bigrams = [HeaderFeatures.ngrams(line) for line in tokenized_mail]
+
+            for bigram in itertools.chain(*bigrams):
+                # convert bigram
+                bistring = bigram[0]+bigram[1]
                 try:
-                    bow[bigram] += 1
+                    bow[bistring] += 1
                 except KeyError:
-                    bow[bigram] = 1
+                    bow[bistring] = 1
                                             
             
             spam_ham = mail[0][len('spam1-train/'):]
@@ -91,9 +96,9 @@ if not os.path.isfile('train_features_' + str(k) + '_bigrams_preextracted.pickle
         fold_runs.append((ext_test_fold,extracted_folds_train,features))
     # pickle away
     pickle.dump(fold_runs,
-                codecs.open('train_features_' + str(k) + '_preextracted.pickle', 'wb'))
+                codecs.open(feature_path, 'wb'))
 else:
-    fold_runs = pickle.load(codecs.open('train_features_' + str(k) + '_preextracted.pickle', 'rb'))
+    fold_runs = pickle.load(codecs.open(feature_path, 'rb'))
 
 res_sets = []
 for run in fold_runs:
@@ -142,7 +147,7 @@ for run in fold_runs:
 classifiers = ''
 for arg in sys.argv[1:]:
     classifiers += arg + '_'
-persist_path = 'eval_' + str(k) + '_' + classifiers + 'preextracted.pickle'
+persist_path = 'eval_' + str(k) + '_' + classifiers + '_bigrams_preextracted.pickle'
 if not os.path.isfile(persist_path):
     pickle.dump(res_sets,codecs.open(persist_path,'wb'))
 
