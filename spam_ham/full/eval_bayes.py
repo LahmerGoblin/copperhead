@@ -8,7 +8,7 @@ import sys
 
 import numpy as np
 
-from HeaderReader import HeaderReader
+from FullReader import FullReader
 from IPython import embed
 
 k = 5
@@ -24,12 +24,12 @@ else:
 #persist_path_bayes = 'eval_' + str(k) + '_bayes_preextracted.pickle'
 res_sets = pickle.load(codecs.open(persist_path,'rb'))
 
-reader = HeaderReader('trainingsheader.zip')
+reader = FullReader('training_full.zip')
 
 balanced_accuracies = []
 for res_set in res_sets:
     gt_keys = list(res_set.keys())
-    gt_keys = [ k[len('spam3-train/'):] for k in gt_keys]
+    gt_keys = [ k[len('spam2-train/'):] for k in gt_keys]
 
     count_correct_spam = 0
     count_correct_ham = 0
@@ -43,7 +43,7 @@ for res_set in res_sets:
         else:
             count_ham_gt += 1
 
-        if int(reader.groundtruth_dict[gt_key])== int(res_set['spam3-train/'+gt_key][0]):
+        if int(reader.groundtruth_dict[gt_key])== int(res_set['spam2-train/'+gt_key][0]):
             if truth == 1:
                 count_correct_spam +=1
             else:

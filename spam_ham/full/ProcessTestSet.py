@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from HeaderReader import HeaderReader
-import HeaderFeatures
+from FullReader import FullReader
+import FullFeatures
 
 from nltk.tokenize import word_tokenize            
 from nltk.corpus import stopwords
@@ -30,22 +30,27 @@ model_path = 'svm_tfidf__bigrams_classpipe.pickle'
 out_path = 'out_svm_tfidf__bigrams.pickle';
 if not os.path.isfile(model_path):
 
-    train_reader = HeaderReader('trainingsheader.zip')
+    train_reader = FullReader('training_full.zip')
     
     train_features = []
     groundtruth = []
     for mailname in train_reader.mailnames:
         mail = train_reader.read_content(mailname)
-        tokenized_mail = [ str(m)[2:-3].split(' ') for m in mail[1]]
-        
+        # extract header
+        print('Performing Feature Extraction '+ mailname)
+        tokenized_mail = [ m.split(' ') for m in mail[1][0]]
+
+        # build dict
         bow = {}
         for word in itertools.chain(*tokenized_mail):
             try:
                 bow[word] += 1
             except KeyError:
                 bow[word] = 1
+        # get rid of prefix 
 
-        bigrams = [HeaderFeatures.ngrams(line) for line in tokenized_mail]
+
+        bigrams = [FullFeatures.ngrams(line) for line in tokenized_mail]
 
         for bigram in itertools.chain(*bigrams):
             # convert bigram
@@ -54,6 +59,26 @@ if not os.path.isfile(model_path):
                 bow[bistring] += 1
             except KeyError:
                 bow[bistring] = 1
+
+        tokenized_mail = word_tokenize(''.join(mail[1][1]))
+        # remove stopwords and stemming
+        stemmed_mail_nostops = [ stemmer.stem_word(word) for word in tokenized_mail if word not in stopwords.words('english')]
+        # remove characters of length one - such as parentheses
+        stemmed_mail_nostops = [ word for word in stemmed_mail_nostops if len(word)>1]
+
+        for word in stemmed_mail_nostops:
+            try:
+                bow[word] += 1
+            except KeyError:
+                bow[word] = 1
+        # add bigrams as additional feature
+        n_grams = FullFeatures.ngrams(stemmed_mail_nostops,n=2)
+        n_grams = [ n_gram[0].join(n_gram[1]) for n_gram in n_grams]
+        for word in n_grams:
+            try:
+                bow[word] += 1
+            except KeyError:
+                bow[word] = 1
 
         spam_ham = mail[0][len('spam1-train/'):]
         train_features.append(bow)
@@ -79,7 +104,7 @@ else:
     class_pipeline = tupl[1]
     vectorizer = tupl[0]
 
-test_reader = HeaderReader('testheader.zip',gt=False)
+test_reader = FullReader('testingfull.zip',gt=False)
 
 output = []
 if os.path.isfile(out_path):
@@ -87,15 +112,19 @@ if os.path.isfile(out_path):
 else:
     for mailname in test_reader.mailnames:
         mail = test_reader.read_content(mailname)
-        tokenized_mail = [ str(m)[2:-3].split(' ') for m in mail[1]]
+        tokenized_mail = [ m.split(' ') for m in mail[1][0]]
+
+        # build dict
         bow = {}
         for word in itertools.chain(*tokenized_mail):
             try:
                 bow[word] += 1
             except KeyError:
                 bow[word] = 1
+        # get rid of prefix 
 
-        bigrams = [HeaderFeatures.ngrams(line) for line in tokenized_mail]
+
+        bigrams = [FullFeatures.ngrams(line) for line in tokenized_mail]
 
         for bigram in itertools.chain(*bigrams):
             # convert bigram
@@ -105,6 +134,26 @@ else:
             except KeyError:
                 bow[bistring] = 1
 
+        tokenized_mail = word_tokenize(''.join(mail[1][1]))
+        # remove stopwords and stemming
+        stemmed_mail_nostops = [ stemmer.stem_word(word) for word in tokenized_mail if word not in stopwords.words('english')]
+        # remove characters of length one - such as parentheses
+        stemmed_mail_nostops = [ word for word in stemmed_mail_nostops if len(word)>1]
+
+        for word in stemmed_mail_nostops:
+            try:
+                bow[word] += 1
+            except KeyError:
+                bow[word] = 1
+        # add bigrams as additional feature
+        n_grams = FullFeatures.ngrams(stemmed_mail_nostops,n=2)
+        n_grams = [ n_gram[0].join(n_gram[1]) for n_gram in n_grams]
+        for word in n_grams:
+            try:
+                bow[word] += 1
+            except KeyError:
+                bow[word] = 1
+
         mail_vec = vectorizer.transform(bow)
         result = int(class_pipeline.predict(mail_vec))
         mail_title = mailname[len('spam3-test/'):]
@@ -112,7 +161,7 @@ else:
         output.append(mail_title + ';' + str(result))
     pickle.dump(output,codecs.open(out_path,'wb'))
 output = [ out+'\n' for out in output] 
-with codecs.open('copperhead_testset_04_header_svm_tfidf_bigrams.csv','wb','utf-8') as out_file:
+with codecs.open('copperhead_testset_01_full_svm_tfidf_bigrams.csv','wb','utf-8') as out_file:
     out_file.writelines(output)
 
     

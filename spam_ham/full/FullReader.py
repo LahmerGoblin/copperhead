@@ -57,7 +57,7 @@ class FullReader:
         # Groundtruth vector loaded
         self.groundtruth_dict = gt_dict
 
-    def subj(header_line):
+    def subj(self,header_line):
         regex =re.compile('Subject: (.*)$')
         match = regex.match(header_line)
         ret_value = ''
@@ -70,8 +70,11 @@ class FullReader:
         filename = filename
         content = []
         with self.zipf.open(filename,'rU') as readfile:
-            content = readfile.readlines()
-        head_end = content.index('\n')
+            for row in readfile:
+                # index hack gets rid of lineterminators
+                content.append(row.decode('UTF-8','replace')[0:-2] + ' ') 
+
+        head_end = content.index(' ')
         header = content[:head_end]
         # find Subject, if any
         subject = None

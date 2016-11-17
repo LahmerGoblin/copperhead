@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from HeaderReader import HeaderReader
-import HeaderFeatures
+from FullReader import FullReader
+import FullFeatures
 
 from nltk.tokenize import word_tokenize            
 from nltk.corpus import stopwords
@@ -29,6 +29,7 @@ k = 5
 reader = FullReader('training_full.zip')
 fold_runs = []
 feature_path = 'train_features_' + str(k) + '_bigrams_preextracted.pickle'
+stemmer = PorterStemmer()
 
 if not os.path.isfile(feature_path):
         
@@ -43,7 +44,7 @@ if not os.path.isfile(feature_path):
         for mail in fold:
             # extract header
             print('Performing Feature Extraction '+ mail[0])
-            tokenized_mail = [ str(m)[2:-3].split(' ') for m in mail[1][0]]
+            tokenized_mail = [ m.split(' ') for m in mail[1][0]]
 
             # build dict
             bow = {}
@@ -55,7 +56,7 @@ if not os.path.isfile(feature_path):
             # get rid of prefix 
 
 
-            bigrams = [HeaderFeatures.ngrams(line) for line in tokenized_mail]
+            bigrams = [FullFeatures.ngrams(line) for line in tokenized_mail]
 
             for bigram in itertools.chain(*bigrams):
                 # convert bigram
@@ -65,7 +66,7 @@ if not os.path.isfile(feature_path):
                 except KeyError:
                     bow[bistring] = 1
 
-            tokenized_mail = word_tokenize(mail[1][1])
+            tokenized_mail = word_tokenize(''.join(mail[1][1]))
             # remove stopwords and stemming
             stemmed_mail_nostops = [ stemmer.stem_word(word) for word in tokenized_mail if word not in stopwords.words('english')]
             # remove characters of length one - such as parentheses
