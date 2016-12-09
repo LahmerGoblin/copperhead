@@ -10,17 +10,30 @@ while read row; do
         wordc=0
         for word in $row; do
             wordc=$((wordc+1))
+            if [[ $wordc == 3 ]]
+            then
+                packet_size=$word
+            fi
         done
         if [[ $wordc == 3 ]]
             then
+            times=$((packet_size/512))
             if [[ $row == 134.169.109.25* ]]
                 then
-                echo 1
+                    while [ $times -gt 0 ]
+                    do
+                        echo 1
+                        times=$((times-1))
+                    done
             else
                 packet_count=$((packet_count+1))
                 if [[ $packet_count -le $p2 ]]
                     then 
-                    echo -1
+                    while [ $times -gt 0 ]
+                    do
+                        echo -1
+                        times=$((times-1))
+                    done
                 else
                     packet_count=$((packet_count-p2))
                 fi
