@@ -7,9 +7,11 @@ import codecs
 
 from IPython import embed
 
+file_out = 'conn_conf.json'
 file_path = 'conns.json'
 if len(sys.argv) > 1:
     file_path = sys.argv[1]
+    file_out = sys.argv[2]
 
 # JSON List
 conn_files = json.load(codecs.open(file_path,'r'))
@@ -27,7 +29,7 @@ for item in conn_files:
         last_port = max(item["_source"]["layers"]["tcp.port"])
         counter = counter + 1
         connections.append([item])
-with codecs.open('conn_conv.json', 'w') as outfile:
+with codecs.open(file_out, 'w') as outfile:
     json.dump(connections,outfile)
 
 
